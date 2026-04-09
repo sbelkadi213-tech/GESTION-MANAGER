@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestion de Service</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#222;}
+/* LOGIN */
+#loginPage{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a3c6e,#2d7dd2);}
+.login-box{background:#fff;border-radius:16px;padding:48px 40px;width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.18);}
+.login-box h1{text-align:center;color:#1a3c6e;margin-bottom:8px;font-size:1.7rem;}
+.login-box p{text-align:center;color:#888;margin-bottom:28px;font-size:.95rem;}
+.login-box label{display:block;font-size:.85rem;color:#555;margin-bottom:4px;font-weight:600;}
+.login-box input{width:100%;padding:10px 14px;border:1.5px solid #d0d8e8;border-radius:8px;font-size:1rem;margin-bottom:16px;outline:none;transition:.2s;}
+.login-box input:focus{border-color:#2d7dd2;}
+.login-box button{width:100%;padding:12px;background:#1a3c6e;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;transition:.2s;}
+.login-box button:hover{background:#2d7dd2;}
+.login-error{color:#e74c3c;text-align:center;font-size:.9rem;margin-top:10px;}
+/* APP */
+#app{display:none;min-height:100vh;}
+/* SIDEBAR */
+#sidebar{position:fixed;top:0;left:0;width:230px;height:100vh;background:linear-gradient(180deg,#1a3c6e 0%,#16325a 100%);color:#fff;overflow-y:auto;z-index:100;transition:.3s;}
+#sidebar .logo{padding:22px 20px 14px;border-bottom:1px solid rgba(255,255,255,.13);}
+#sidebar .logo h2{font-size:1.05rem;font-weight:800;letter-spacing:1px;}
+#sidebar .logo span{font-size:.75rem;opacity:.7;}
+#sidebar nav{padding:10px 0;}
+#sidebar nav .nav-item{display:flex;align-items:center;gap:10px;padding:11px 20px;cursor:pointer;font-size:.88rem;border-left:3px solid transparent;transition:.15s;}
+#sidebar nav .nav-item:hover{background:rgba(255,255,255,.09);border-left-color:#6ab4f5;}
+#sidebar nav .nav-item.active{background:rgba(255,255,255,.15);border-left-color:#6ab4f5;font-weight:700;}
+#sidebar nav .nav-item .icon{font-size:1.1rem;min-width:22px;}
+#sidebar .user-info{position:absolute;bottom:0;width:100%;padding:14px 20px;background:rgba(0,0,0,.18);font-size:.82rem;}
+#sidebar .user-info .uname{font-weight:700;}
+#sidebar .user-info .urole{opacity:.7;font-size:.75rem;}
+#sidebar .user-info .logout-btn{margin-top:8px;background:rgba(255,255,255,.13);border:none;color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.8rem;width:100%;}
+#sidebar .user-info .logout-btn:hover{background:rgba(255,255,255,.25);}
+/* MAIN */
+#main{margin-left:230px;padding:28px;min-height:100vh;}
+#topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+#topbar h1{font-size:1.4rem;color:#1a3c6e;font-weight:800;}
+.search-global{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #d0d8e8;border-radius:8px;padding:7px 14px;}
+.search-global input{border:none;outline:none;font-size:.9rem;width:220px;}
+/* CARDS */
+.cards-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px;}
+.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.07);border-left:4px solid #2d7dd2;}
+.card .card-val{font-size:2rem;font-weight:800;color:#1a3c6e;}
+.card .card-label{font-size:.8rem;color:#888;margin-top:4px;}
+/* SECTION */
+.section{background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:24px;}
+.section h2{font-size:1.1rem;color:#1a3c6e;font-weight:800;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #e8edf5;}
+.section h3{font-size:.97rem;color:#2d7dd2;font-weight:700;margin:14px 0 8px;}
+/* TABS */
+.tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+.tab-btn{padding:7px 18px;border:1.5px solid #d0d8e8;border-radius:7px;background:#f5f8fc;cursor:pointer;font-size:.85rem;font-weight:600;color:#555;transition:.15s;}
+.tab-btn.active{background:#1a3c6e;color:#fff;border-color:#1a3c6e;}
+.tab-btn:hover:not(.active){background:#e8edf5;}
+/* TABLE */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.85rem;}
+thead tr{background:#1a3c6e;color:#fff;}
+thead th{padding:10px 12px;text-align:left;font-weight:600;white-space:nowrap;}
+tbody tr:nth-child(even){background:#f5f8fc;}
+tbody tr:hover{background:#e8edf5;}
+tbody td{padding:8px 12px;border-bottom:1px solid #e8edf5;vertical-align:top;}
+tbody td[contenteditable="true"]{outline:none;background:#fffde7;border-bottom:1.5px solid #f0c040;}
+/* CONTROLS */
+.tbl-controls{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
+.tbl-search{display:flex;align-items:center;gap:6px;background:#f5f8fc;border:1.5px solid #d0d8e8;border-radius:7px;padding:5px 12px;}
+.tbl-search input{border:none;outline:none;background:transparent;font-size:.85rem;width:170px;}
+.btn{padding:7px 16px;border:none;border-radius:7px;cursor:pointer;font-size:.83rem;font-weight:600;transition:.15s;}
+.btn-add{background:#27ae60;color:#fff;}
+.btn-add:hover{background:#1e9152;}
+.btn-del{background:#e74c3c;color:#fff;padding:4px 10px;font-size:.78rem;}
+.btn-del:hover{background:#c0392b;}
+.btn-edit{background:#2d7dd2;color:#fff;padding:4px 10px;font-size:.78rem;}
+.btn-edit:hover{background:#1a5fab;}
+/* BADGE */
+.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;}
+.badge-admin{background:#1a3c6e;color:#fff;}
+.badge-user{background:#2d7dd2;color:#fff;}
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal{background:#fff;border-radius:14px;padding:32px 28px;width:480px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18);max-height:90vh;overflow-y:auto;}
+.modal h3{color:#1a3c6e;margin-bottom:18px;font-size:1.1rem;}
+.modal label{display:block;font-size:.83rem;font-weight:600;color:#555;margin-bottom:3px;}
+.modal input,.modal select,.modal textarea{width:100%;padding:8px 12px;border:1.5px solid #d0d8e8;border-radius:7px;font-size:.88rem;margin-bottom:12px;outline:none;}
+.modal input:focus,.modal select:focus,.modal textarea:focus{border-color:#2d7dd2;}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:8px;}
+.btn-cancel{background:#e8edf5;color:#555;}
+.btn-cancel:hover{background:#d0d8e8;}
+.btn-save{background:#1a3c6e;color:#fff;}
+.btn-save:hover{background:#2d7dd2;}
+/* LIST ITEMS */
+.list-items{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+.list-item{background:#e8edf5;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:.88rem;font-weight:600;color:#1a3c6e;border:2px solid transparent;transition:.15s;}
+.list-item.active{background:#1a3c6e;color:#fff;border-color:#1a3c6e;}
+.list-item:hover:not(.active){border-color:#2d7dd2;}
+/* ENERGIE MENU */
+.energie-cats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.ecat{padding:8px 18px;border-radius:8px;background:#e8edf5;color:#1a3c6e;cursor:pointer;font-weight:700;font-size:.88rem;border:2px solid transparent;transition:.15s;}
+.ecat.active{background:#1a3c6e;color:#fff;}
+.ecat:hover:not(.active){border-color:#2d7dd2;}
+.sub-tabs{display:flex;gap:6px;margin-bottom:12px;}
+.sub-tab{padding:5px 14px;border-radius:6px;background:#f5f8fc;border:1.5px solid #d0d8e8;cursor:pointer;font-size:.82rem;font-weight:600;color:#555;}
+.sub-tab.active{background:#2d7dd2;color:#fff;border-color:#2d7dd2;}
+/* ALPHABET */
+.alpha-bar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;}
+.alpha-btn{width:32px;height:32px;border-radius:6px;border:1.5px solid #d0d8e8;background:#f5f8fc;cursor:pointer;font-size:.82rem;font-weight:700;color:#555;display:flex;align-items:center;justify-content:center;transition:.15s;}
+.alpha-btn.active{background:#1a3c6e;color:#fff;border-color:#1a3c6e;}
+.alpha-btn:hover:not(.active){background:#e8edf5;}
+/* RH */
+.rh-tabs{display:flex;gap:8px;margin-bottom:18px;}
+/* HIDDEN */
+.hidden{display:none;}
+/* RESPONSIVE */
+@media(max-width:700px){
+  #sidebar{width:60px;}
+  #sidebar .logo h2,#sidebar .logo span,#sidebar nav .nav-item span,#sidebar .user-info .uname,#sidebar .user-info .urole,#sidebar .user-info .logout-btn{display:none;}
+  #sidebar nav .nav-item{justify-content:center;padding:14px 0;}
+  #main{margin-left:60px;padding:14px;}
+}
+.page{display:none;}
+.page.active{display:block;}
+/* CONGÉ */
+.conge-names{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center;}
+.conge-name-btn{padding:7px 16px;border-radius:8px;background:#e8edf5;color:#1a3c6e;cursor:pointer;font-weight:600;font-size:.85rem;border:2px solid transparent;}
+.conge-name-btn.active{background:#1a3c6e;color:#fff;}
+.top-info{background:linear-gradient(135deg,#1a3c6e,#2d7dd2);color:#fff;border-radius:12px;padding:18px 24px;margin-bottom:24px;display:flex;align-items:center;gap:16px;}
+.top-info .ti-icon{font-size:2.2rem;}
+.top-info h2{font-size:1.15rem;font-weight:800;}
+.top-info p{font-size:.85rem;opacity:.85;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage">
+  <div class="login-box">
+    <h1>🏢 Gestion Service</h1>
+    <p>Plateforme de centralisation des données</p>
+    <label>Identifiant</label>
+    <input type="text" id="loginUser" placeholder="Entrez votre identifiant">
+    <label>Mot de passe</label>
+    <input type="password" id="loginPass" placeholder="Entrez votre mot de passe">
+    <button onclick="doLogin()">Se connecter</button>
+    <div class="login-error" id="loginError"></div>
+    <div style="margin-top:18px;background:#f5f8fc;border-radius:8px;padding:12px;font-size:.8rem;color:#888;">
+      <b>Admin :</b> admin / admin123<br>
+      <b>Utilisateur :</b> user / user123
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="logo">
+      <h2>📡 GESTION SERVICE</h2>
+      <span>Plateforme Centralisée</span>
+    </div>
+    <nav>
+      <div class="nav-item active" onclick="showPage('dashboard')"><span class="icon">🏠</span><span>Tableau de Bord</span></div>
+      <div class="nav-item" onclick="showPage('repertoire')"><span class="icon">📒</span><span>Répertoire</span></div>
+      <div class="nav-item" onclick="showPage('boucle')"><span class="icon">🔄</span><span>Boucle</span></div>
+      <div class="nav-item" onclick="showPage('fmx')"><span class="icon">📡</span><span>FMX</span></div>
+      <div class="nav-item" onclick="showPage('fibre')"><span class="icon">🔌</span><span>Fibre &amp; ODF</span></div>
+      <div class="nav-item" onclick="showPage('energie')"><span class="icon">⚡</span><span>Énergie &amp; Env.</span></div>
+      <div class="nav-item" onclick="showPage('visite')"><span class="icon">👥</span><span>Intervenants &amp; Visiteurs</span></div>
+      <div class="nav-item" id="navRH" onclick="showPage('rh')"><span class="icon">👤</span><span>RH</span></div>
+    </nav>
+    <div class="user-info">
+      <div class="uname" id="sidebarUser">Admin</div>
+      <div class="urole" id="sidebarRole">Administrateur</div>
+      <button class="logout-btn" onclick="doLogout()">🚪 Déconnexion</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="main">
+    <div id="topbar">
+      <h1 id="pageTitle">📊 Tableau de Bord</h1>
+      <div class="search-global">
+        <span>🔍</span>
+        <input type="text" placeholder="Recherche globale..." oninput="globalSearch(this.value)">
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="top-info">
+        <div class="ti-icon">📊</div>
+        <div>
+          <h2>Bienvenue sur la plateforme de gestion</h2>
+          <p>Centralisez et gérez toutes les données de votre service en un seul endroit</p>
+        </div>
+      </div>
+      <div class="cards-row" id="dashCards"></div>
+      <div class="section">
+        <h2>🔍 Résultats de recherche globale</h2>
+        <div id="globalResults" style="color:#888;font-size:.9rem;">Utilisez la barre de recherche ci-dessus pour trouver des données dans toute l'application.</div>
+      </div>
+    </div>
+
+    <!-- REPERTOIRE -->
+    <div class="page" id="page-repertoire">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="repTab('local')">📍 LOCAL</button>
+        <button class="tab-btn" onclick="repTab('regional')">🌍 RÉGIONAL</button>
+        <button class="tab-btn" onclick="repTab('entreprise')">🏭 Entreprise AT Prestataire</button>
+      </div>
+      <div class="section" id="rep-local">
+        <h2>📍 Répertoire LOCAL</h2>
+        <div id="tbl-rep-local"></div>
+      </div>
+      <div class="section hidden" id="rep-regional">
+        <h2>🌍 Répertoire RÉGIONAL</h2>
+        <div id="tbl-rep-regional"></div>
+      </div>
+      <div class="section hidden" id="rep-entreprise">
+        <h2>🏭 Entreprise AT Prestataire</h2>
+        <div id="tbl-rep-entreprise"></div>
+      </div>
+    </div>
+
+    <!-- BOUCLE -->
+    <div class="page" id="page-boucle">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="boucleTab('local')">📍 BOUCLE LOCAL</button>
+        <button class="tab-btn" onclick="boucleTab('regional')">🌍 BOUCLE RÉGIONAL</button>
+      </div>
+      <div class="section" id="boucle-local">
+        <h2>📍 Boucle Local</h2>
+        <div id="boucle-local-content"></div>
+      </div>
+      <div class="section hidden" id="boucle-regional">
+        <h2>🌍 Boucle Régional</h2>
+        <div id="boucle-regional-content"></div>
+      </div>
+    </div>
+
+    <!-- FMX -->
+    <div class="page" id="page-fmx">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="fmxTab('local')">📡 FMX LOCAL</button>
+        <button class="tab-btn" onclick="fmxTab('regional')">🌍 FMX RÉGIONAL</button>
+      </div>
+      <div class="section" id="fmx-local">
+        <h2>📡 FMX Local</h2>
+        <div id="fmx-local-content"></div>
+      </div>
+      <div class="section hidden" id="fmx-regional">
+        <h2>🌍 FMX Régional</h2>
+        <div id="fmx-regional-content"></div>
+      </div>
+    </div>
+
+    <!-- FIBRE -->
+    <div class="page" id="page-fibre">
+      <div class="section">
+        <h2>🔌 Fibre &amp; ODF</h2>
+        <div class="alpha-bar" id="alphaBar"></div>
+        <div id="fibre-content"></div>
+      </div>
+    </div>
+
+    <!-- ENERGIE -->
+    <div class="page" id="page-energie">
+      <div class="section">
+        <h2>⚡ Énergie &amp; Environnement</h2>
+        <div class="energie-cats" id="energieCats"></div>
+        <div class="sub-tabs" id="energieSubTabs"></div>
+        <div id="energie-content"></div>
+      </div>
+    </div>
+
+    <!-- VISITE -->
+    <div class="page" id="page-visite">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="visiteTab('intervenant')">🔧 INTERVENANTS</button>
+        <button class="tab-btn" onclick="visiteTab('visiteurs')">👁️ VISITEURS</button>
+        <button class="tab-btn" onclick="visiteTab('entreprise')">🏭 Entreprise AT Prestataire</button>
+      </div>
+      <div class="section" id="visite-intervenant">
+        <h2>🔧 Intervenants</h2>
+        <div id="tbl-intervenants"></div>
+      </div>
+      <div class="section hidden" id="visite-visiteurs">
+        <h2>👁️ Visiteurs</h2>
+        <div id="tbl-visiteurs"></div>
+      </div>
+      <div class="section hidden" id="visite-entreprise">
+        <h2>🏭 Entreprise AT Prestataire</h2>
+        <div id="tbl-visite-entreprise"></div>
+      </div>
+    </div>
+
+    <!-- RH -->
+    <div class="page" id="page-rh">
+      <div class="section" style="background:#fff3cd;border-left:4px solid #ffc107;margin-bottom:16px;padding:12px 20px;">
+        <b>🔒 Module réservé à l'administrateur</b>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="rhTab('personnel')">👤 PERSONNEL</button>
+        <button class="tab-btn" onclick="rhTab('formation')">📚 FORMATION</button>
+        <button class="tab-btn" onclick="rhTab('conge')">🏖️ CONGÉ</button>
+      </div>
+      <div class="section" id="rh-personnel">
+        <h2>👤 Personnel</h2>
+        <div id="tbl-personnel"></div>
+      </div>
+      <div class="section hidden" id="rh-formation">
+        <h2>📚 Formation</h2>
+        <div id="tbl-formation"></div>
+      </div>
+      <div class="section hidden" id="rh-conge">
+        <h2>🏖️ Congé</h2>
+        <div id="conge-content"></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalTitle">Ajouter</h3>
+    <div id="modalBody"></div>
+    <div class="modal-btns">
+      <button class="btn btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-save" onclick="saveModal()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DONNÉES
+// ============================================================
+var DB = {
+  currentUser: null,
+  data: {}
+};
+
+var USERS = [
+  {id:'admin',pass:'admin123',role:'admin',name:'Administrateur'},
+  {id:'user',pass:'user123',role:'user',name:'Utilisateur'}
+];
+
+// Schéma initial
+var INITIAL = {
+  'rep-local': [],
+  'rep-regional': [],
+  'rep-entreprise': [],
+  'boucle-local-sections': [{id:1,name:'Section 1',rows:[]}],
+  'boucle-regional-sections': [{id:1,name:'Section 1',rows:[]}],
+  'fmx-local-sections': [{id:1,name:'FMX 1',rows:[]}],
+  'fmx-regional-sections': [{id:1,name:'FMX 1',rows:[]}],
+  'fibre': {},
+  'energie': {
+    'GE':{'ETAT':[],'INTERVENTION':[],'DERANGEMENT':[]},
+    'CLIM':{'ETAT':[],'INTERVENTION':[],'DERANGEMENT':[]},
+    'ONDULAIRE':{'ETAT':[],'INTERVENTION':[],'DERANGEMENT':[]},
+    'BATTERIE':{'ETAT':[],'INTERVENTION':[],'DERANGEMENT':[]},
+    'ATELIER':{'ETAT':[],'INTERVENTION':[],'DERANGEMENT':[]},
+    '48V':{'ETAT':[],'INTERVENTION':[],'DERANGEMENT':[]}
+  },
+  'intervenants': [],
+  'visiteurs': [],
+  'visite-entreprise': [],
+  'personnel': [],
+  'formation': [],
+  'conge': {}
+};
+
+function loadDB(){
+  var saved = localStorage.getItem('gestionServiceDB');
+  if(saved){
+    try{ DB.data = JSON.parse(saved); }catch(e){ DB.data = JSON.parse(JSON.stringify(INITIAL)); }
+  } else {
+    DB.data = JSON.parse(JSON.stringify(INITIAL));
+  }
+  // Merge missing keys
+  for(var k in INITIAL){
+    if(DB.data[k] === undefined) DB.data[k] = JSON.parse(JSON.stringify(INITIAL[k]));
+  }
+  if(!DB.data.energie) DB.data.energie = JSON.parse(JSON.stringify(INITIAL.energie));
+  var eCats = ['GE','CLIM','ONDULAIRE','BATTERIE','ATELIER','48V'];
+  eCats.forEach(function(c){
+    if(!DB.data.energie[c]) DB.data.energie[c] = {'ETAT':[],'INTERVENTION':[],'DERANGEMENT':[]};
+  });
+}
+
+function saveDB(){
+  localStorage.setItem('gestionServiceDB', JSON.stringify(DB.data));
+}
+
+// ============================================================
+// COLONNES
+// ============================================================
+var COLS = {
+  'rep-local': ['Nom','Fixe','Mobile','Mail','Adresse','Observations'],
+  'rep-regional': ['Nom','Fixe','Mobile','Mail','Adresse','Observations'],
+  'rep-entreprise': ['Nom','Entreprise','Nature Intervention','Date','Observations'],
+  'boucle': ['Position','Slot','EX A','Positions','Slot','EX B','Observations'],
+  'fmx': ['Position','EX A','EX B'],
+  'fibre': ['Paires','EX A','N° ODF','Étage','EX B','N° ODF B','Étage B','Date','Intervenant'],
+  'intervenants': ['Nom','Service','Nature Intervention','Date','Observations'],
+  'visiteurs': ['Nom','Structure','Nature Visite','Date','Observations'],
+  'visite-entreprise': ['Nom','Entreprise','Nature Intervention','Date','Observations'],
+  'personnel': ['Nom','Matricule','Grade','Date Recrutement','Email','Adresse','Mobile'],
+  'formation': ['Nom','Formation','Date','Lieu','Besoin'],
+  'conge': ['Date Début','Date Fin','Durée','Reste','Observations'],
+  'GE-ETAT': ['Marque','Date MES','État','Observations'],
+  'GE-INTERVENTION': ['Date','Test','Index','Batterie','Fuel','Huile','Eau','Observations'],
+  'GE-DERANGEMENT': ['Date','Coupure Secteur','Défaut Démarrage','Anomalie','Service Avisé','Observations'],
+  'CLIM-ETAT': ['Marque','Date MES','État','Observations'],
+  'CLIM-INTERVENTION': ['Marque','Date','IN','OUT','Observations'],
+  'CLIM-DERANGEMENT': ['Marque','Date','Nature Défaut','Anomalie','Service Avisé','Observations'],
+  'ONDULAIRE-ETAT': ['Marque','Date MES','État','Observations'],
+  'ONDULAIRE-INTERVENTION': ['Date','Maintenance','Batterie','Observations'],
+  'ONDULAIRE-DERANGEMENT': ['Date','Coupure Secteur','Défaut Démarrage','Anomalie','Service Avisé','Observations'],
+  'BATTERIE-ETAT': ['Marque','Date MES','État','Observations'],
+  'BATTERIE-INTERVENTION': ['Date','Test','Observations'],
+  'BATTERIE-DERANGEMENT': ['Date','Impact','Anomalie','Service Avisé','Observations'],
+  'ATELIER-ETAT': ['Marque','Date MES','État','Observations'],
+  'ATELIER-INTERVENTION': ['Date','Maintenance','Consommation','Observations'],
+  'ATELIER-DERANGEMENT': ['Date','Coupure Secteur','Défaut Module','Anomalie','Service Avisé','Observations'],
+  '48V-ETAT': ['Marque','Date MES','État','Observations'],
+  '48V-INTERVENTION': ['Date','Maintenance','Consommation','Observations'],
+  '48V-DERANGEMENT': ['Date','Coupure Secteur','Défaut Module','Anomalie','Service Avisé','Observations']
+};
+
+// ============================================================
+// STATE
+// ============================================================
+var STATE = {
+  activePage: 'dashboard',
+  repTab: 'local',
+  boucleTab: 'local',
+  boucleLocalSel: 0,
+  boucleRegSel: 0,
+  fmxTab: 'local',
+  fmxLocalSel: 0,
+  fmxRegSel: 0,
+  fibreLetter: 'A',
+  energieCat: 'GE',
+  energieSub: 'ETAT',
+  visiteTab: 'intervenant',
+  rhTab: 'personnel',
+  congeSelected: null,
+  modalConfig: null
+};
+
+// ============================================================
+// AUTH
+// ============================================================
+function doLogin(){
+  var u = document.getElementById('loginUser').value.trim();
+  var p = document.getElementById('loginPass').value;
+  var found = USERS.find(function(x){return x.id===u && x.pass===p;});
+  if(found){
+    DB.currentUser = found;
+    document.getElementById('loginPage').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('sidebarUser').textContent = found.name;
+    document.getElementById('sidebarRole').textContent = found.role==='admin'?'Administrateur':'Utilisateur';
+    if(found.role!=='admin') document.getElementById('navRH').style.display='none';
+    else document.getElementById('navRH').style.display='flex';
+    initApp();
+  } else {
+    document.getElementById('loginError').textContent = '❌ Identifiant ou mot de passe incorrect';
+  }
+}
+
+document.getElementById('loginPass').addEventListener('keypress',function(e){if(e.key==='Enter')doLogin();});
+document.getElementById('loginUser').addEventListener('keypress',function(e){if(e.key==='Enter')doLogin();});
+
+function doLogout(){
+  DB.currentUser = null;
+  document.getElementById('loginPage').style.display='flex';
+  document.getElementById('app').style.display='none';
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginError').textContent='';
+}
+
+function isAdmin(){return DB.currentUser && DB.currentUser.role==='admin';}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(page){
+  if(page==='rh' && !isAdmin()){alert('Accès réservé à l\'administrateur.');return;}
+  STATE.activePage = page;
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  var titles = {
+    dashboard:'📊 Tableau de Bord',
+    repertoire:'📒 Répertoire',
+    boucle:'🔄 Boucle',
+    fmx:'📡 FMX',
+    fibre:'🔌 Fibre & ODF',
+    energie:'⚡ Énergie & Environnement',
+    visite:'👥 Intervenants & Visiteurs',
+    rh:'👤 Ressources Humaines'
+  };
+  document.getElementById('pageTitle').textContent = titles[page]||page;
+  var navItems = document.querySelectorAll('.nav-item');
+  var pageOrder = ['dashboard','repertoire','boucle','fmx','fibre','energie','visite','rh'];
+  var idx = pageOrder.indexOf(page);
+  if(idx>=0 && navItems[idx]) navItems[idx].classList.add('active');
+  renderPage(page);
+}
+
+function renderPage(page){
+  if(page==='dashboard') renderDashboard();
+  else if(page==='repertoire') renderRepertoire();
+  else if(page==='boucle') renderBoucle();
+  else if(page==='fmx') renderFmx();
+  else if(page==='fibre') renderFibre();
+  else if(page==='energie') renderEnergie();
+  else if(page==='visite') renderVisite();
+  else if(page==='rh') renderRH();
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard(){
+  var cards = [
+    {label:'Contacts Local', val: DB.data['rep-local'].length, icon:'📍'},
+    {label:'Contacts Régional', val: DB.data['rep-regional'].length, icon:'🌍'},
+    {label:'Intervenants', val: DB.data['intervenants'].length, icon:'🔧'},
+    {label:'Visiteurs', val: DB.data['visiteurs'].length, icon:'👁️'},
+    {label:'Personnel RH', val: DB.data['personnel'].length, icon:'👤'},
+    {label:'Formations', val: DB.data['formation'].length, icon:'📚'}
+  ];
+  var html = '';
+  cards.forEach(function(c){
+    html += '<div class="card"><div class="card-val">'+c.icon+' '+c.val+'</div><div class="card-label">'+c.label+'</div></div>';
+  });
+  document.getElementById('dashCards').innerHTML = html;
+}
+
+// ============================================================
+// GLOBAL SEARCH
+// ============================================================
+function globalSearch(q){
+  var res = document.getElementById('globalResults');
+  if(!q||q.length<2){res.innerHTML='<span style="color:#888">Tapez au moins 2 caractères pour rechercher.</span>';return;}
+  q = q.toLowerCase();
+  var found = [];
+  var searchIn = function(arr,label,cols){
+    if(!Array.isArray(arr))return;
+    arr.forEach(function(row,i){
+      var vals = Object.values(row).join(' ').toLowerCase();
+      if(vals.indexOf(q)>=0) found.push({label:label,row:row,cols:cols});
+    });
+  };
+  searchIn(DB.data['rep-local'],'Répertoire Local',COLS['rep-local']);
+  searchIn(DB.data['rep-regional'],'Répertoire Régional',COLS['rep-regional']);
+  searchIn(DB.data['rep-entreprise'],'Entreprise AT',COLS['rep-entreprise']);
+  searchIn(DB.data['intervenants'],'Intervenants',COLS['intervenants']);
+  searchIn(DB.data['visiteurs'],'Visiteurs',COLS['visiteurs']);
+  searchIn(DB.data['personnel'],'Personnel RH',COLS['personnel']);
+  searchIn(DB.data['formation'],'Formation',COLS['formation']);
+  // Boucle
+  DB.data['boucle-local-sections'].forEach(function(s){
+    searchIn(s.rows,'Boucle Local - '+s.name,COLS['boucle']);
+  });
+  DB.data['boucle-regional-sections'].forEach(function(s){
+    searchIn(s.rows,'Boucle Régional - '+s.name,COLS['boucle']);
+  });
+  // FMX
+  DB.data['fmx-local-sections'].forEach(function(s){
+    searchIn(s.rows,'FMX Local - '+s.name,COLS['fmx']);
+  });
+  // Energie
+  var eCats = ['GE','CLIM','ONDULAIRE','BATTERIE','ATELIER','48V'];
+  var eSubs = ['ETAT','INTERVENTION','DERANGEMENT'];
+  eCats.forEach(function(c){
+    eSubs.forEach(function(s){
+      var key = c+'-'+s;
+      searchIn(DB.data.energie[c][s],'Énergie '+c+' '+s, COLS[key]||[]);
+    });
+  });
+  if(found.length===0){res.innerHTML='<span style="color:#e74c3c">Aucun résultat trouvé pour "'+q+'"</span>';return;}
+  var h = '<b style="color:#27ae60">'+found.length+' résultat(s) trouvé(s)</b><br><br>';
+  found.slice(0,30).forEach(function(f){
+    h += '<div style="background:#f5f8fc;border-radius:8px;padding:8px 14px;margin-bottom:6px;font-size:.85rem;">';
+    h += '<b style="color:#1a3c6e">'+f.label+'</b> — ';
+    var vals = [];
+    f.cols.forEach(function(c,i){
+      var v = f.row['c'+i]||'';
+      if(v) vals.push('<span style="color:#555">'+c+':</span> <b>'+v+'</b>');
+    });
+    h += vals.join(' | ');
+    h += '</div>';
+  });
+  res.innerHTML = h;
+}
+
+// ============================================================
+// TABLE RENDERER
+// ============================================================
+function renderTable(containerId, key, cols, rows, searchId){
+  var isAd = isAdmin();
+  var searchVal = '';
+  if(searchId && document.getElementById(searchId)){
+    searchVal = document.getElementById(searchId).value.toLowerCase();
+  }
+  var filtered = rows.filter(function(row){
+    if(!searchVal) return true;
+    return Object.values(row).join(' ').toLowerCase().indexOf(searchVal)>=0;
+  });
+
+  var h = '<div class="tbl-controls">';
+  h += '<div class="tbl-search"><span>🔍</span><input type="text" id="'+(searchId||'s'+containerId)+'" placeholder="Rechercher..." oninput="renderTable(\''+containerId+'\',\''+key+'\','+JSON.stringify(cols)+',getRows(\''+key+'\'),\''+(searchId||'s'+containerId)+'\')"></div>';
+  if(isAd) h += '<button class="btn btn-add" onclick="openAddModal(\''+key+'\','+JSON.stringify(cols)+')">➕ Ajouter</button>';
+  h += '</div>';
+  h += '<div class="tbl-wrap"><table><thead><tr>';
+  cols.forEach(function(c){h+='<th>'+c+'</th>';});
+  if(isAd) h+='<th>Actions</th>';
+  h+='</tr></thead><tbody>';
+  if(filtered.length===0){
+    h+='<tr><td colspan="'+(cols.length+(isAd?1:0))+'" style="text-align:center;color:#aaa;padding:20px;">Aucune donnée</td></tr>';
+  }
+  filtered.forEach(function(row,ri){
+    var realIdx = rows.indexOf(row);
+    h+='<tr>';
+    cols.forEach(function(c,ci){
+      var v = row['c'+ci]||'';
+      h+='<td>'+escHtml(v)+'</td>';
+    });
+    if(isAd){
+      h+='<td><button class="btn btn-edit" onclick="openEditModal(\''+key+'\','+JSON.stringify(cols)+','+realIdx+')">✏️</button> ';
+      h+='<button class="btn btn-del" onclick="delRow(\''+key+'\','+realIdx+')">🗑️</button></td>';
+    }
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  var cont = document.getElementById(containerId);
+  var prev = searchId ? (document.getElementById(searchId||'s'+containerId)||null) : null;
+  var prevVal = prev ? prev.value : '';
+  if(cont){
+    cont.innerHTML = h;
+    if(searchId||true){
+      var inp = document.getElementById(searchId||'s'+containerId);
+      if(inp && prevVal) inp.value = prevVal;
+    }
+  }
+}
+
+function getRows(key){
+  var parts = key.split('|');
+  if(parts[0]==='boucle-local'){
+    var idx = parseInt(parts[1]);
+    return DB.data['boucle-local-sections'][idx].rows;
+  } else if(parts[0]==='boucle-regional'){
+    var idx = parseInt(parts[1]);
+    return DB.data['boucle-regional-sections'][idx].rows;
+  } else if(parts[0]==='fmx-local'){
+    var idx = parseInt(parts[1]);
+    return DB.data['fmx-local-sections'][idx].rows;
+  } else if(parts[0]==='fmx-regional'){
+    var idx = parseInt(parts[1]);
+    return DB.data['fmx-regional-sections'][idx].rows;
+  } else if(parts[0]==='fibre'){
+    var letter = parts[1];
+    return DB.data.fibre[letter]||[];
+  } else if(parts[0]==='energie'){
+    var cat = parts[1], sub = parts[2];
+    return DB.data.energie[cat][sub]||[];
+  } else if(parts[0]==='conge'){
+    var name = parts[1];
+    return DB.data.conge[name]||[];
+  } else {
+    return DB.data[key]||[];
+  }
+}
+
+function setRows(key, rows){
+  var parts = key.split('|');
+  if(parts[0]==='boucle-local'){
+    DB.data['boucle-local-sections'][parseInt(parts[1])].rows = rows;
+  } else if(parts[0]==='boucle-regional'){
+    DB.data['boucle-regional-sections'][parseInt(parts[1])].rows = rows;
+  } else if(parts[0]==='fmx-local'){
+    DB.data['fmx-local-sections'][parseInt(parts[1])].rows = rows;
+  } else if(parts[0]==='fmx-regional'){
+    DB.data['fmx-regional-sections'][parseInt(parts[1])].rows = rows;
+  } else if(parts[0]==='fibre'){
+    if(!DB.data.fibre[parts[1]]) DB.data.fibre[parts[1]]=[];
+    DB.data.fibre[parts[1]] = rows;
+  } else if(parts[0]==='energie'){
+    DB.data.energie[parts[1]][parts[2]] = rows;
+  } else if(parts[0]==='conge'){
+    DB.data.conge[parts[1]] = rows;
+  } else {
+    DB.data[key] = rows;
+  }
+  saveDB();
+}
+
+function delRow(key, idx){
+  if(!confirm('Supprimer cette ligne ?')) return;
+  var rows = getRows(key);
+  rows.splice(idx,1);
+  setRows(key, rows);
+  renderPage(STATE.activePage);
+}
+
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ============================================================
+// MODAL
+// ============================================================
+function openAddModal(key, cols){
+  STATE.modalConfig = {key:key, cols:cols, idx:-1, row:{}};
+  document.getElementById('modalTitle').textContent = '➕ Ajouter une ligne';
+  buildModalBody(cols, {});
+  document.getElementById('modalBg').classList.add('show');
+}
+
+function openEditModal(key, cols, idx){
+  var rows = getRows(key);
+  var row = rows[idx]||{};
+  STATE.modalConfig = {key:key, cols:cols, idx:idx, row:row};
+  document.getElementById('modalTitle').textContent = '✏️ Modifier la ligne';
+  buildModalBody(cols, row);
+  document.getElementById('modalBg').classList.add('show');
+}
+
+function buildModalBody(cols, row){
+  var h = '';
+  cols.forEach(function(c,i){
+    h += '<label>'+c+'</label>';
+    if(c.toLowerCase().indexOf('date')>=0){
+      h += '<input type="date" id="mf'+i+'" value="'+(row['c'+i]||'')+'">';
+    } else if(c.toLowerCase()==='observations'||c.toLowerCase()==='obs'){
+      h += '<textarea id="mf'+i+'" rows="2">'+(row['c'+i]||'')+'</textarea>';
+    } else {
+      h += '<input type="text" id="mf'+i+'" value="'+escHtml(row['c'+i]||'')+'">';
+    }
+  });
+  document.getElementById('modalBody').innerHTML = h;
+}
+
+function saveModal(){
+  var cfg = STATE.modalConfig;
+  if(!cfg) return;
+  var row = {};
+  cfg.cols.forEach(function(c,i){
+    var el = document.getElementById('mf'+i);
+    row['c'+i] = el ? el.value : '';
+  });
+  var rows = getRows(cfg.key);
+  if(cfg.idx===-1) rows.push(row);
+  else rows[cfg.idx] = row;
+  setRows(cfg.key, rows);
+  closeModal();
+  renderPage(STATE.activePage);
+}
+
+function closeModal(){
+  document.getElementById('modalBg').classList.remove('show');
+  STATE.modalConfig = null;
+}
+
+document.getElementById('modalBg').addEventListener('click',function(e){
+  if(e.target===this) closeModal();
+});
+
+// ============================================================
+// REPERTOIRE
+// ============================================================
+function repTab(t){
+  STATE.repTab = t;
+  ['local','regional','entreprise'].forEach(function(x){
+    document.getElementById('rep-'+x).classList.add('hidden');
+  });
+  document.getElementById('rep-'+t).classList.remove('hidden');
+  document.querySelectorAll('#page-repertoire .tab-btn').forEach(function(b,i){b.classList.remove('active');});
+  var tabs = ['local','regional','entreprise'];
+  document.querySelectorAll('#page-repertoire .tab-btn')[tabs.indexOf(t)].classList.add('active');
+  renderRepertoire();
+}
+
+function renderRepertoire(){
+  renderTable('tbl-rep-local','rep-local',COLS['rep-local'],DB.data['rep-local'],'srep-local');
+  renderTable('tbl-rep-regional','rep-regional',COLS['rep-regional'],DB.data['rep-regional'],'srep-regional');
+  renderTable('tbl-rep-entreprise','rep-entreprise',COLS['rep-entreprise'],DB.data['rep-entreprise'],'srep-entreprise');
+}
+
+// ============================================================
+// BOUCLE
+// ============================================================
+function boucleTab(t){
+  STATE.boucleTab = t;
+  document.getElementById('boucle-local').classList.add('hidden');
+  document.getElementById('boucle-regional').classList.add('hidden');
+  document.getElementById('boucle-'+t).classList.remove('hidden');
+  document.querySelectorAll('#page-boucle .tab-btn').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('#page-boucle .tab-btn')[t==='local'?0:1].classList.add('active');
+  renderBoucle();
+}
+
+function renderBoucle(){
+  renderBoucleSection('local');
+  renderBoucleSection('regional');
+}
+
+function renderBoucleSection(type){
+  var key = 'boucle-'+type+'-sections';
+  var sections = DB.data[key];
+  var selIdx = type==='local' ? STATE.boucleLocalSel : STATE.boucleRegSel;
+  if(selIdx >= sections.length) selIdx = 0;
+  var isAd = isAdmin();
+  var h = '';
+  // Section list
+  h += '<div class="list-items" id="bl-list-'+type+'">';
+  sections.forEach(function(s,i){
+    h += '<div class="list-item'+(i===selIdx?' active':'')+'" onclick="selectBoucleSection(\''+type+'\','+i+')">'+escHtml(s.name)+'</div>';
+  });
+  if(isAd) h += '<button class="btn btn-add" style="padding:6px 14px;" onclick="addBoucleSection(\''+type+'\')">➕</button>';
+  h += '</div>';
+  // Search + Edit section name
+  if(isAd && sections[selIdx]){
+    h += '<div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">';
+    h += '<input type="text" id="bl-title-'+type+'" value="'+escHtml(sections[selIdx].name)+'" style="padding:6px 12px;border:1.5px solid #d0d8e8;border-radius:7px;font-size:.88rem;width:200px;">';
+    h += '<button class="btn btn-edit" onclick="saveBoucleTitle(\''+type+'\')">💾 Sauvegarder titre</button>';
+    if(isAd) h += '<button class="btn btn-del" onclick="delBoucleSection(\''+type+'\','+selIdx+')">🗑️ Supprimer section</button>';
+    h += '</div>';
+  }
+  if(sections[selIdx]){
+    h += '<div id="bl-tbl-'+type+'"></div>';
+  }
+  document.getElementById('boucle-'+type+'-content').innerHTML = h;
+  if(sections[selIdx]){
+    var rowKey = 'boucle-'+type+'|'+selIdx;
+    renderTable('bl-tbl-'+type, rowKey, COLS['boucle'], sections[selIdx].rows, 'sbl-'+type);
+  }
+}
+
+function selectBoucleSection(type,idx){
+  if(type==='local') STATE.boucleLocalSel=idx;
+  else STATE.boucleRegSel=idx;
+  renderBoucleSection(type);
+}
+
+function addBoucleSection(type){
+  var key = 'boucle-'+type+'-sections';
+  var n = DB.data[key].length+1;
+  DB.data[key].push({id:n,name:'Section '+n,rows:[]});
+  saveDB();
+  if(type==='local') STATE.boucleLocalSel=DB.data[key].length-1;
+  else STATE.boucleRegSel=DB.data[key].length-1;
+  renderBoucleSection(type);
+}
+
+function saveBoucleTitle(type){
+  var key = 'boucle-'+type+'-sections';
+  var selIdx = type==='local'?STATE.boucleLocalSel:STATE.boucleRegSel;
+  var val = document.getElementById('bl-title-'+type).value;
+  DB.data[key][selIdx].name = val;
+  saveDB();
+  renderBoucleSection(type);
+}
+
+function delBoucleSection(type,idx){
+  if(!confirm('Supprimer cette section ?')) return;
+  var key = 'boucle-'+type+'-sections';
+  DB.data[key].splice(idx,1);
+  if(DB.data[key].length===0) DB.data[key].push({id:1,name:'Section 1',rows:[]});
+  saveDB();
+  if(type==='local') STATE.boucleLocalSel=0;
+  else STATE.boucleRegSel=0;
+  renderBoucleSection(type);
+}
+
+// ============================================================
+// FMX
+// ============================================================
+function fmxTab(t){
+  STATE.fmxTab = t;
+  document.getElementById('fmx-local').classList.add('hidden');
+  document.getElementById('fmx-regional').classList.add('hidden');
+  document.getElementById('fmx-'+t).classList.remove('hidden');
+  document.querySelectorAll('#page-fmx .tab-btn').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('#page-fmx .tab-btn')[t==='local'?0:1].classList.add('active');
+  renderFmx();
+}
+
+function renderFmx(){
+  renderFmxSection('local');
+  renderFmxSection('regional');
+}
+
+function renderFmxSection(type){
+  var key = 'fmx-'+type+'-sections';
+  var sections = DB.data[key];
+  var selIdx = type==='local'?STATE.fmxLocalSel:STATE.fmxRegSel;
+  if(selIdx>=sections.length) selIdx=0;
+  var isAd = isAdmin();
+  var h = '';
+  h += '<div class="list-items">';
+  sections.forEach(function(s,i){
+    h += '<div class="list-item'+(i===selIdx?' active':'')+'" onclick="selectFmxSection(\''+type+'\','+i+')">'+escHtml(s.name)+'</div>';
+  });
+  if(isAd) h += '<button class="btn btn-add" style="padding:6px 14px;" onclick="addFmxSection(\''+type+'\')">➕</button>';
+  h += '</div>';
+  if(isAd && sections[selIdx]){
+    h += '<div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;">';
+    h += '<input type="text" id="fx-title-'+type+'" value="'+escHtml(sections[selIdx].name)+'" style="padding:6px 12px;border:1.5px solid #d0d8e8;border-radius:7px;font-size:.88rem;width:200px;">';
+    h += '<button class="btn btn-edit" onclick="saveFmxTitle(\''+type+'\')">💾 Sauvegarder titre</button>';
+    h += '<button class="btn btn-del" onclick="delFmxSection(\''+type+'\','+selIdx+')">🗑️ Supprimer</button>';
+    h += '</div>';
+  }
+  if(sections[selIdx]){
+    h += '<div id="fx-tbl-'+type+'"></div>';
+  }
+  document.getElementById('fmx-'+type+'-content').innerHTML = h;
+  if(sections[selIdx]){
+    var rowKey = 'fmx-'+type+'|'+selIdx;
+    renderTable('fx-tbl-'+type, rowKey, COLS['fmx'], sections[selIdx].rows, 'sfx-'+type);
+  }
+}
+
+function selectFmxSection(type,idx){
+  if(type==='local') STATE.fmxLocalSel=idx;
+  else STATE.fmxRegSel=idx;
+  renderFmxSection(type);
+}
+
+function addFmxSection(type){
+  var key = 'fmx-'+type+'-sections';
+  var n = DB.data[key].length+1;
+  DB.data[key].push({id:n,name:'FMX '+n,rows:[]});
+  saveDB();
+  if(type==='local') STATE.fmxLocalSel=DB.data[key].length-1;
+  else STATE.fmxRegSel=DB.data[key].length-1;
+  renderFmxSection(type);
+}
+
+function saveFmxTitle(type){
+  var key = 'fmx-'+type+'-sections';
+  var selIdx = type==='local'?STATE.fmxLocalSel:STATE.fmxRegSel;
+  var val = document.getElementById('fx-title-'+type).value;
+  DB.data[key][selIdx].name = val;
+  saveDB();
+  renderFmxSection(type);
+}
+
+function delFmxSection(type,idx){
+  if(!confirm('Supprimer cette section ?')) return;
+  var key = 'fmx-'+type+'-sections';
+  DB.data[key].splice(idx,1);
+  if(DB.data[key].length===0) DB.data[key].push({id:1,name:'FMX 1',rows:[]});
+  saveDB();
+  if(type==='local') STATE.fmxLocalSel=0;
+  else STATE.fmxRegSel=0;
+  renderFmxSection(type);
+}
+
+// ============================================================
+// FIBRE
+// ============================================================
+var ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+function renderFibre(){
+  var h = '';
+  ALPHABET.forEach(function(l){
+    h += '<button class="alpha-btn'+(l===STATE.fibreLetter?' active':'')+'" onclick="selectFibreLetter(\''+l+'\')">'+l+'</button>';
+  });
+  document.getElementById('alphaBar').innerHTML = h;
+  renderFibreTable();
+}
+
+function selectFibreLetter(l){
+  STATE.fibreLetter = l;
+  renderFibre();
+}
+
+function renderFibreTable(){
+  var letter = STATE.fibreLetter;
+  if(!DB.data.fibre[letter]) DB.data.fibre[letter]=[];
+  var key = 'fibre|'+letter;
+  var rows = DB.data.fibre[letter];
+  var cont = document.getElementById('fibre-content');
+  var isAd = isAdmin();
+  var h = '<h3>📁 Fibre — Lettre : '+letter+'</h3>';
+  h += '<div id="fibre-tbl"></div>';
+  cont.innerHTML = h;
+  renderTable('fibre-tbl', key, COLS['fibre'], rows, 'sfibre');
+}
+
+// ============================================================
+// ENERGIE
+// ============================================================
+var ENERGIE_CATS = ['GE','CLIM','ONDULAIRE','BATTERIE','ATELIER','48V'];
+var ENERGIE_SUBS = ['ETAT','INTERVENTION','DERANGEMENT'];
+var ENERGIE_ICONS = {'GE':'🔋','CLIM':'❄️','ONDULAIRE':'🔄','BATTERIE':'⚡','ATELIER':'🔧','48V':'⚡'};
+
+function renderEnergie(){
+  // cats
+  var h = '';
+  ENERGIE_CATS.forEach(function(c){
+    h += '<div class="ecat'+(c===STATE.energieCat?' active':'')+'" onclick="selectEnergieCat(\''+c+'\')">'+(ENERGIE_ICONS[c]||'')+'  '+c+'</div>';
+  });
+  document.getElementById('energieCats').innerHTML = h;
+  // sub tabs
+  var sh = '';
+  ENERGIE_SUBS.forEach(function(s){
+    sh += '<button class="sub-tab'+(s===STATE.energieSub?' active':'')+'" onclick="selectEnergieSub(\''+s+'\')">'+s+'</button>';
+  });
+  document.getElementById('energieSubTabs').innerHTML = sh;
+  // table
+  renderEnergieTable();
+}
+
+function selectEnergieCat(c){
+  STATE.energieCat = c;
+  renderEnergie();
+}
+
+function selectEnergieSub(s){
+  STATE.energieSub = s;
+  renderEnergie();
+}
+
+function renderEnergieTable(){
+  var cat = STATE.energieCat, sub = STATE.energieSub;
+  var key = 'energie|'+cat+'|'+sub;
+  var colKey = cat+'-'+sub;
+  var cols = COLS[colKey] || ['Date','Observations'];
+  var rows = DB.data.energie[cat][sub]||[];
+  document.getElementById('energie-content').innerHTML = '<div id="energie-tbl"></div>';
+  renderTable('energie-tbl', key, cols, rows, 'senergie');
+}
+
+// ============================================================
+// VISITE
+// ============================================================
+function visiteTab(t){
+  STATE.visiteTab = t;
+  ['intervenant','visiteurs','entreprise'].forEach(function(x){
+    document.getElementById('visite-'+x).classList.add('hidden');
+  });
+  document.getElementById('visite-'+t).classList.remove('hidden');
+  document.querySelectorAll('#page-visite .tab-btn').forEach(function(b){b.classList.remove('active');});
+  var tabs = ['intervenant','visiteurs','entreprise'];
+  document.querySelectorAll('#page-visite .tab-btn')[tabs.indexOf(t)].classList.add('active');
+  renderVisite();
+}
+
+function renderVisite(){
+  renderTable('tbl-intervenants','intervenants',COLS['intervenants'],DB.data['intervenants'],'sintervenants');
+  renderTable('tbl-visiteurs','visiteurs',COLS['visiteurs'],DB.data['visiteurs'],'svisiteurs');
+  renderTable('tbl-visite-entreprise','visite-entreprise',COLS['visite-entreprise'],DB.data['visite-entreprise'],'svisent');
+}
+
+// ============================================================
+// RH
+// ============================================================
+function rhTab(t){
+  STATE.rhTab = t;
+  ['personnel','formation','conge'].forEach(function(x){
+    document.getElementById('rh-'+x).classList.add('hidden');
+  });
+  document.getElementById('rh-'+t).classList.remove('hidden');
+  document.querySelectorAll('#page-rh .tab-btn').forEach(function(b){b.classList.remove('active');});
+  var tabs = ['personnel','formation','conge'];
+  document.querySelectorAll('#page-rh .tab-btn')[tabs.indexOf(t)].classList.add('active');
+  renderRH();
+}
+
+function renderRH(){
+  if(!isAdmin()) return;
+  renderTable('tbl-personnel','personnel',COLS['personnel'],DB.data['personnel'],'spersonnel');
+  renderTable('tbl-formation','formation',COLS['formation'],DB.data['formation'],'sformation');
+  renderConge();
+}
+
+function renderConge(){
+  var isAd = isAdmin();
+  var names = Object.keys(DB.data.conge);
+  var h = '<div class="conge-names">';
+  names.forEach(function(n){
+    h += '<div class="conge-name-btn'+(n===STATE.congeSelected?' active':'')+'" onclick="selectConge(\''+n+'\')">'+escHtml(n)+'</div>';
+  });
+  if(isAd) h += '<button class="btn btn-add" onclick="addCongeNom()">➕ Nouveau nom</button>';
+  h += '</div>';
+  if(STATE.congeSelected && DB.data.conge[STATE.congeSelected]!==undefined){
+    h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">';
+    h += '<h3 style="margin:0;">🏖️ Congés de : <span style="color:#1a3c6e;">'+escHtml(STATE.congeSelected)+'</span></h3>';
+    if(isAd) h += '<button class="btn btn-del" onclick="delCongeNom(\''+STATE.congeSelected+'\')">🗑️ Supprimer</button>';
+    h += '</div>';
+    h += '<div id="conge-tbl"></div>';
+  } else {
+    h += '<div style="color:#aaa;padding:20px;text-align:center;">Sélectionnez ou créez un nom pour voir les congés.</div>';
+  }
+  document.getElementById('conge-content').innerHTML = h;
+  if(STATE.congeSelected && DB.data.conge[STATE.congeSelected]!==undefined){
+    var key = 'conge|'+STATE.congeSelected;
+    renderTable('conge-tbl', key, COLS['conge'], DB.data.conge[STATE.congeSelected], 'sconge');
+  }
+}
+
+function selectConge(n){
+  STATE.congeSelected = n;
+  renderConge();
+}
+
+function addCongeNom(){
+  var name = prompt('Nom de l\'employé :');
+  if(!name||!name.trim()) return;
+  name = name.trim();
+  if(DB.data.conge[name]!==undefined){alert('Ce nom existe déjà.');return;}
+  DB.data.conge[name] = [];
+  saveDB();
+  STATE.congeSelected = name;
+  renderConge();
+}
+
+function delCongeNom(name){
+  if(!confirm('Supprimer tous les congés de '+name+' ?')) return;
+  delete DB.data.conge[name];
+  saveDB();
+  STATE.congeSelected = null;
+  renderConge();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function initApp(){
+  loadDB();
+  renderDashboard();
+  renderFibre();
+}
+
+// Keyboard enter for login
+window.onload = function(){
+  loadDB();
+};
+</script>
+</body>
+</html>
